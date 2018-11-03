@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package FlightSimulator;
+
+service FlightSimulatorService {
+    rpc GetCameraStream(DummyQ) returns (stream CameraStreamQ) {}
+}
+
+message DummyQ {
+    int32 dummy = 1;
+}
+
+message CameraStreamQ {
+    repeated CameraStream streams = 1;
+}
+
+message CameraStream {
+    bytes data = 1;
+}
