@@ -11,6 +11,7 @@ namespace FlightSimulatorServer
 
         public override async Task GetCameraStream(DummyQ request, IServerStreamWriter<CameraStreamQ> responseStream, ServerCallContext context)
         {
+            Console.WriteLine("Connect host: " + context.Host + " \nmethod: " + context.Method);
             int count = 0;
             while (true)
             {
@@ -32,7 +33,7 @@ namespace FlightSimulatorServer
     {
         static void Main(string[] args)
         {
-            string _host = "localhost";
+            string _host = "192.168.1.30";
             int _port = 8888;
 
             Server server = new Server
