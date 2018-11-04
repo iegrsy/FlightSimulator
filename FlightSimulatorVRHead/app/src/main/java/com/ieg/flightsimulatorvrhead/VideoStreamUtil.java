@@ -1,5 +1,7 @@
 package com.ieg.flightsimulatorvrhead;
 
+import android.annotation.SuppressLint;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import java.util.Iterator;
@@ -51,11 +53,12 @@ public class VideoStreamUtil {
         public void onChange(Fsp.CameraStreamQ streamQ);
     }
 
+    @SuppressLint("StaticFieldLeak")
     private void GetFrames(final ChangeFrameListener listener) {
         if (channel != null) {
             new Thread(new Runnable() {
                 @Override
-                public void run() throws RuntimeException {
+                public void run() {
                     try {
                         isConnect = true;
                         FlightSimulatorServiceGrpc.FlightSimulatorServiceBlockingStub blockingStub =
