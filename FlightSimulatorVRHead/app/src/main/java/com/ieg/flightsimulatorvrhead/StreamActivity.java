@@ -12,7 +12,7 @@ import android.widget.ImageView;
 
 import FlightSimulator.Fsp;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class StreamActivity extends AppCompatActivity implements View.OnClickListener {
 
     private boolean mVisible = true;
     private View mControlsView;
@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_stream);
 
         ivVideo = findViewById(R.id.iv_video);
         mControlsView = findViewById(R.id.fullscreen_content_controls);
