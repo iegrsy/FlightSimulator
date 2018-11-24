@@ -4,15 +4,11 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
-
-import java.util.Arrays;
 
 import FlightSimulator.Fsp;
 
@@ -24,10 +20,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageView ivVideo;
     private Button btnConnect;
 
-    private String host = "192.168.1.30";
+    private String host = "192.168.1.20";
     private int port = 8888;
 
     private VideoStreamUtil streamUtil;
+    private VideoStreamUDP streamUDP;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +37,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         ivVideo.setOnClickListener(this);
         btnConnect.setOnClickListener(this);
+
+        streamUDP = new VideoStreamUDP(this);
+        streamUDP.setFrameListener(changeFrameListenerUDP);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (streamUDP != null)
+            streamUDP.startListen();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (streamUDP != null)
+            streamUDP.stopListen();
     }
 
     private Bitmap Bytes2Image(byte[] data, int w, int h) {
@@ -53,15 +67,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565);
     }
 
+    VideoStreamUDP.ChangeFrameListener changeFrameListenerUDP = new VideoStreamUDP.ChangeFrameListener() {
+        @Override
+        public void onChange(final byte[] data) {
+            if (data != null && data.length > 0) {
+                Log.e("debug", "get data: " + data.length);
+                final int w = ivVideo.getWidth();
+                final int h = ivVideo.getHeight();
+                if (w <= 0 || h <= 0) {
+                    Log.e("debug", "error dimensions w: " + w + "h: " + h);
+                    return;
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ivVideo.setImageBitmap(Bytes2Image(data, w, h));
+                    }
+                });
+            } else {
+                Log.d("debug", "Data error!! Data null or empty.");
+            }
+        }
+    };
+
     VideoStreamUtil.ChangeFrameListener changeFrameListener = new VideoStreamUtil.ChangeFrameListener() {
         @Override
         public void onChange(final Fsp.CameraStreamQ streamQ) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    byte[] data = streamQ.getStreamsList().get(0).getData().toByteArray();
+                    final byte[] data = streamQ.getStreamsList().get(0).getData().toByteArray();
                     if (data != null && data.length > 0) {
-                        ivVideo.setImageBitmap(Bytes2Image(data, ivVideo.getWidth(), ivVideo.getHeight()));
+                        Log.e("debug", "get data: " + data.length);
+                        final int w = ivVideo.getWidth();
+                        final int h = ivVideo.getHeight();
+                        if (w <= 0 || h <= 0) {
+                            Log.e("debug", "error dimensions w: " + w + "h: " + h);
+                            return;
+                        }
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ivVideo.setImageBitmap(Bytes2Image(data, w, h));
+                            }
+                        });
                     } else {
                         Log.d("debug", "Data error!! Data null or empty.");
                     }
