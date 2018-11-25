@@ -46,44 +46,58 @@ namespace FlightSimulatorServer
     {
         static void Main(string[] args)
         {
-            string _host = "192.168.1.20";
-            int _port = 8888;
+            string _host = "127.0.0.1";
+            int _portRPC = 8888;
+            int _portUDP = 9999;
 
-            // Server server = new Server
-            // {
-            //     Services = { FlightSimulatorService.BindService(new FlightSimulatorSeviceImpl()) },
-            //     Ports = { new ServerPort(_host, _port, ServerCredentials.Insecure) }
-            // };
-            // server.Start();
+            Server server = new Server
+            {
+                Services = { FlightSimulatorService.BindService(new FlightSimulatorSeviceImpl()) },
+                Ports = { new ServerPort(_host, _portRPC, ServerCredentials.Insecure) }
+            };
+            server.Start();
 
-            Console.WriteLine("Server listening on port " + _port);
+            UdpServer udpServer = new UdpServer();
+            udpServer.StartUDPListener(_portUDP);
+
+            Console.WriteLine("Server listening on IP: " + _host);
+            Console.WriteLine("Server listening on RPC port: " + _portRPC);
+            Console.WriteLine("Server listening on UDP port: " + _portUDP);
             Console.WriteLine("Press any key to stop the server...");
-
-            sendUDP();
 
             Console.ReadKey();
 
-            // server.ShutdownAsync().Wait();
+            server.ShutdownAsync().Wait();
+        }
+    }
+
+    class UdpServer
+    {
+        private int port;
+        private UdpClient client;
+
+        public void StartUDPListener(int _port)
+        {
+            port = _port;
+            client = new UdpClient(port);
+            try
+            {
+                client.BeginReceive(new AsyncCallback(ListenForData), null);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("On client connect exception " + e);
+            }
         }
 
-        static void sendUDP()
+        private void ListenForData(IAsyncResult result)
         {
-            Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            IPAddress serverAddr = IPAddress.Parse("198.168.1.21");
-            IPEndPoint endPoint = new IPEndPoint(serverAddr, 9999);
+            IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, port);
+            byte[] received = client.EndReceive(result, ref endPoint);
 
-            byte[] send_buffer = new byte[] { (byte)0x89 };
-            SampleImage image = new SampleImage(100, 100);
-
-            for (int i = 0; i < 1000; i++)
-            {
-                send_buffer = image.getSample();
-                sock.SendTo(send_buffer, endPoint);
-                System.Threading.Thread.Sleep(500);
-                Console.WriteLine("Waiting.... " + i);
-            }
-
-            sock.Close();
+            String sensorValues = Encoding.ASCII.GetString(received);
+            System.Console.WriteLine("Sensor: " + sensorValues);
+            client.BeginReceive(new AsyncCallback(ListenForData), null);
         }
     }
 }
