@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -23,8 +24,9 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
 
     private LinearLayout controlPanel;
     private TextInputEditText hostInput;
-    private Button headBtn;
-    private Button joystickBtn;
+    private Button connectBtn;
+    private Button disconnectBtn;
+    private Spinner modeSpinner;
 
     private HeadSensors headSensors;
     private boolean isRunning = false;
@@ -39,18 +41,19 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
 
     private void initUI() {
         hostInput = (TextInputEditText) findViewById(R.id.server_host);
-        headBtn = (Button) findViewById(R.id.btn_head);
-        joystickBtn = (Button) findViewById(R.id.btn_joystick);
+        connectBtn = (Button) findViewById(R.id.btn_connect);
+        disconnectBtn = (Button) findViewById(R.id.btn_disconnect);
         controlPanel = (LinearLayout) findViewById(R.id.control_panel);
+        modeSpinner = (Spinner) findViewById(R.id.spinner_mode);
 
-        headBtn.setOnClickListener(this);
-        joystickBtn.setOnClickListener(this);
+        connectBtn.setOnClickListener(this);
+        disconnectBtn.setOnClickListener(this);
     }
 
     private final Runnable toggleHeadButton = new Runnable() {
         @Override
         public void run() {
-            headBtn.setBackgroundColor(isRunning ? Color.GREEN : Color.RED);
+            connectBtn.setBackgroundColor(isRunning ? Color.GREEN : Color.RED);
         }
     };
 
@@ -83,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
         }
 
         switch (v.getId()) {
-            case R.id.btn_head: {
+            case R.id.btn_connect: {
                 if (headSensors == null)
                     headSensors = new HeadSensors(this);
 
@@ -99,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
 
                 break;
             }
-            case R.id.btn_joystick: {
+            case R.id.btn_disconnect: {
                 setRunning(false);
 
                 if (headSensors != null)
@@ -126,17 +129,19 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
                 DatagramSocket socket = null;
                 while (isRunning) {
                     try {
-                        String msg;
-                        msg = (headSensors != null) ? headSensors.getSensorValues().toString() : "";
-                        assert headSensors != null;
-                        msg = String.format("head?%s,%s,%s",
-                                headSensors.getSensorValues().orientation_a,
-                                headSensors.getSensorValues().orientation_p,
-                                headSensors.getSensorValues().orientation_r);
+                        String msg = "";
+                        String mode = modeSpinner.getSelectedItem().toString();
+                        if (!mode.isEmpty()) {
+                            msg = String.format("%s?%s,%s,%s",
+                                    mode,
+                                    headSensors.getSensorValues().orientation_a,
+                                    headSensors.getSensorValues().orientation_p,
+                                    headSensors.getSensorValues().orientation_r);
+                        }
                         byte[] message = msg.getBytes();
 
                         Log.e("debug", msg);
-                        socket = new DatagramSocket();
+                        if (socket == null) socket = new DatagramSocket();
                         DatagramPacket p = new DatagramPacket(message, message.length, serverHost, udpPort);
                         socket.send(p);
 
