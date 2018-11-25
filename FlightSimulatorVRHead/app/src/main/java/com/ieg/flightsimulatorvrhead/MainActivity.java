@@ -17,6 +17,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity implements Button.OnClickListener {
 
@@ -99,7 +100,10 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
                 break;
             }
             case R.id.btn_joystick: {
+                setRunning(false);
 
+                if (headSensors != null)
+                    headSensors.stopListener();
                 break;
             }
         }
@@ -108,11 +112,6 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
     @Override
     protected void onPause() {
         super.onPause();
-
-        setRunning(false);
-
-        if (headSensors != null)
-            headSensors.stopListener();
     }
 
     public static final int udpPort = 9999;
@@ -129,10 +128,16 @@ public class MainActivity extends AppCompatActivity implements Button.OnClickLis
                     try {
                         String msg;
                         msg = (headSensors != null) ? headSensors.getSensorValues().toString() : "";
+                        assert headSensors != null;
+                        msg = String.format("head?%s,%s,%s",
+                                headSensors.getSensorValues().orientation_a,
+                                headSensors.getSensorValues().orientation_p,
+                                headSensors.getSensorValues().orientation_r);
                         byte[] message = msg.getBytes();
 
-                        if (socket == null) socket = new DatagramSocket();
-                        DatagramPacket p = new DatagramPacket(message, msg.length(), serverHost, udpPort);
+                        Log.e("debug", msg);
+                        socket = new DatagramSocket();
+                        DatagramPacket p = new DatagramPacket(message, message.length, serverHost, udpPort);
                         socket.send(p);
 
                         Thread.sleep(100);

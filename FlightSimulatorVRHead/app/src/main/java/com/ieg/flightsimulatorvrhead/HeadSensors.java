@@ -39,18 +39,18 @@ public class HeadSensors implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
+        valuesUpdate(sensorEvent);
         long curTime = System.currentTimeMillis();
         if ((curTime - lastUpdate) > updateInterval) {
             lastUpdate = curTime;
-            valuesUpdate(sensorEvent);
         }
     }
 
-    public synchronized SensorValues getSensorValues() {
+    public SensorValues getSensorValues() {
         return sensorValues;
     }
 
-    private synchronized void valuesUpdate(SensorEvent sensorEvent) {
+    private void valuesUpdate(SensorEvent sensorEvent) {
         Sensor mySensor = sensorEvent.sensor;
 
         if (mySensor.getType() == Sensor.TYPE_ACCELEROMETER) {
