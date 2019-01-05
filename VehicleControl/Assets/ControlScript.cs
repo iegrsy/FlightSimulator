@@ -17,7 +17,7 @@ public class ControlScript : MonoBehaviour
     private Quaternion headQ;
 
     public GameObject vehicle;
-    public Quaternion vehicleQ;
+    private Quaternion vehicleQ;
 
     private void StartUDPListener(int _port)
     {
@@ -90,7 +90,7 @@ public class ControlScript : MonoBehaviour
     void Update()
     {
         vehicle.transform.rotation = vehicleQ;
-        head.transform.rotation = headQ;
+        head.transform.rotation = new Quaternion(vehicleQ.x + headQ.x,vehicleQ.y + headQ.y,vehicleQ.z + headQ.z,vehicleQ.w + headQ.w);
     }
 
     public static Quaternion Euler(float yaw, float pitch, float roll)
