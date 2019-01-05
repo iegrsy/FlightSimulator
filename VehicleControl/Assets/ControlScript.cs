@@ -13,6 +13,12 @@ public class ControlScript : MonoBehaviour
     private int port;
     private UdpClient client;
 
+    public GameObject head;
+    private Quaternion headQ;
+
+    public GameObject vehicle;
+    public Quaternion vehicleQ;
+
     private void StartUDPListener(int _port)
     {
         port = _port;
@@ -64,6 +70,7 @@ public class ControlScript : MonoBehaviour
         try
         {
             vector = GetVector(str); // yaw, pitch, roll
+            vehicleQ = Euler(vector[1], vector[0], vector[2]);
         }
         catch (Exception e) { Debug.Log(e.Message); }
     }
@@ -74,6 +81,7 @@ public class ControlScript : MonoBehaviour
         try
         {
             vector = GetVector(str); // yaw, pitch, roll
+            headQ = Euler(vector[1], vector[0], vector[2]);
         }
         catch (Exception e) { Debug.Log(e.Message); }
     }
@@ -81,7 +89,8 @@ public class ControlScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        vehicle.transform.rotation = vehicleQ;
+        head.transform.rotation = headQ;
     }
 
     public static Quaternion Euler(float yaw, float pitch, float roll)

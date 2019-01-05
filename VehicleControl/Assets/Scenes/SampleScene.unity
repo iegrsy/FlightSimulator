@@ -288,6 +288,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e34589ac5e864144bfb14fce3cfc562, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  head: {fileID: 882380065}
+  vehicle: {fileID: 764414882}
+  vehicleQ: {x: 0, y: 0, z: 0, w: 0}
 --- !u!4 &764414884 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 497068, guid: 5b2c6140eccb253409c26108347d47d3,
