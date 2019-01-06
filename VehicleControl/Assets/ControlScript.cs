@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
 using System.Text;
+using System.Threading;
 using UnityEngine;
 
 public class ControlScript : MonoBehaviour
@@ -29,7 +30,7 @@ public class ControlScript : MonoBehaviour
         }
         catch (Exception e)
         {
-            Console.WriteLine("On client connect exception " + e);
+            Debug.Log("On client connect exception " + e);
         }
     }
 
@@ -43,10 +44,60 @@ public class ControlScript : MonoBehaviour
 
         client.BeginReceive(new AsyncCallback(ListenForData), null);
     }
+    public static string GetLocalIPAddress()
+    {
+        var host = Dns.GetHostEntry(Dns.GetHostName());
+        foreach (var ip in host.AddressList)
+        {
+            if (ip.AddressFamily == AddressFamily.InterNetwork)
+            {
+                return ip.ToString();
+            }
+        }
+        throw new Exception("No network adapters with an IPv4 address in the system!");
+    }
+    private static void StartUPNPListener()
+    {
+        bool done = false;
+
+        IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, 1900);
+
+        string localIP = GetLocalIPAddress();
+        Debug.Log("UPNP ip: " + localIP);
+
+        UdpClient listener = new UdpClient();
+        listener.Client.Bind(localEndPoint);
+        listener.JoinMulticastGroup(IPAddress.Parse("239.255.255.250"), IPAddress.Parse(localIP));
+
+        IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, 0);
+
+        try
+        {
+            while (!done)
+            {
+                Debug.Log("Waiting for broadcast");
+                var bytes = listener.Receive(ref groupEP);
+
+                Debug.Log(String.Format("Received broadcast from {0} :\n {1}\n",
+                   groupEP.ToString(),
+                   Encoding.ASCII.GetString(bytes, 0, bytes.Length)));
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e.ToString());
+        }
+        finally
+        {
+            listener.Close();
+        }
+    }
 
     // Use this for initialization
     void Start()
     {
+        Thread t = new Thread(new ThreadStart(StartUPNPListener));
+        t.Start();
         StartUDPListener(9999);
     }
 
@@ -90,7 +141,7 @@ public class ControlScript : MonoBehaviour
     void Update()
     {
         vehicle.transform.rotation = vehicleQ;
-        head.transform.rotation = new Quaternion(vehicleQ.x + headQ.x,vehicleQ.y + headQ.y,vehicleQ.z + headQ.z,vehicleQ.w + headQ.w);
+        head.transform.rotation = new Quaternion(vehicleQ.x + headQ.x, vehicleQ.y + headQ.y, vehicleQ.z + headQ.z, vehicleQ.w + headQ.w);
     }
 
     public static Quaternion Euler(float yaw, float pitch, float roll)
